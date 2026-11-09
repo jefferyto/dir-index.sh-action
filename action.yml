@@ -324,13 +324,14 @@ runs:
   using: composite
   steps:
     - run: |
-        : Install dependencies on macOS
         brew update-if-needed
         brew install autoconf automake coreutils findutils gnu-sed
       shell: bash
       if: ${{ runner.os == 'macos' }}
+      name: Install dependencies
 
     - if: ${{ runner.os == 'windows' }}
+      name: Set up MSYS2
       id: setup-msys2
       uses: msys2/setup-msys2@v2
       with:
@@ -339,18 +340,17 @@ runs:
         install: autotools
 
     - run: |
-        : Set up Windows environment
         echo "MSYSTEM=UCRT64" >> "$GITHUB_ENV"
         echo "MSYS2_PATH_TYPE=minimal" >> "$GITHUB_ENV"
         echo "CHERE_INVOKING=1" >> "$GITHUB_ENV"
         echo "$MSYS2_LOCATION/usr/bin" >> "$GITHUB_PATH"
       shell: bash
       if: ${{ runner.os == 'windows' }}
+      name: Set up MSYS2 environment
       env:
         MSYS2_LOCATION: ${{ steps.setup-msys2.outputs.msys2-location }}
 
     - run: |
-        : Set up
         epoch=$((`TZ=GMT0 date \
           +"((%Y-1600)*365+(%Y-1600)/4-(%Y-1600)/100+(%Y-1600)/400+1%j-1000-135140) \
           *86400+(1%H-100)*3600+(1%M-100)*60+(1%S-100)"`))
@@ -367,9 +367,11 @@ runs:
         echo "action-dir=$dir" >> "$GITHUB_OUTPUT"
         echo "repo-dir=$dir/repo" >> "$GITHUB_OUTPUT"
       shell: bash
+      name: Set up
       id: setup
 
-    - uses: actions/checkout@v7
+    - name: Check out dir-index.sh
+      uses: actions/checkout@v7
       with:
         repository: jefferyto/dir-index.sh
         ref: ${{ inputs.dir-index-sh-ref }}
@@ -377,18 +379,17 @@ runs:
         clean: "false"
 
     - run: |
-        : Set up dir-index.sh
         cd "$SETUP_REPO_DIR"
         ./bootstrap
         cd build
         ../configure --prefix="$PWD"
         make install
       shell: bash
+      name: Build dir-index.sh
       env:
         SETUP_REPO_DIR: ${{ steps.setup.outputs.repo-dir }}
 
     - run: |
-        : Run dir-index.sh
         true_opt() {
           if [ "$2" == "true" ]; then
             args+=("$1")
@@ -517,6 +518,7 @@ runs:
         dash "$SETUP_REPO_DIR/build/bin/dir-index.sh" "${args[@]}"
 
       shell: bash
+      name: Run dir-index.sh
       env:
         SETUP_TEMP_DIR: ${{ steps.setup.outputs.temp-dir }}
         SETUP_ACTION_DIR: ${{ steps.setup.outputs.action-dir }}
@@ -564,9 +566,9 @@ runs:
         INPUT_XML_ENCODING: ${{ inputs.xml-encoding }}
 
     - run: |
-        : Clean up
         rm -rf "$SETUP_ACTION_DIR"
       shell: bash
       if: ${{ !cancelled() }}
+      name: Clean up
       env:
         SETUP_ACTION_DIR: ${{ steps.setup.outputs.action-dir }}
