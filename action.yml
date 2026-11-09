@@ -379,15 +379,13 @@ runs:
         clean: "false"
 
     - run: |
-        cd "$SETUP_REPO_DIR"
         ./bootstrap
         cd build
         ../configure --prefix="$PWD"
         make install
       shell: bash
       name: Build dir-index.sh
-      env:
-        SETUP_REPO_DIR: ${{ steps.setup.outputs.repo-dir }}
+      working-directory: ${{ steps.setup.outputs.repo-dir }}
 
     - run: |
         true_opt() {
