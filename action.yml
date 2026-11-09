@@ -324,6 +324,32 @@ runs:
   using: composite
   steps:
     - run: |
+        : Install dependencies on macOS
+        brew update-if-needed
+        brew install autoconf automake coreutils findutils gnu-sed
+      shell: bash
+      if: ${{ runner.os == 'macos' }}
+
+    - if: ${{ runner.os == 'windows' }}
+      id: setup-msys2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        update: true
+        install: autotools
+
+    - run: |
+        : Set up Windows environment
+        echo "MSYSTEM=UCRT64" >> "$GITHUB_ENV"
+        echo "MSYS2_PATH_TYPE=minimal" >> "$GITHUB_ENV"
+        echo "CHERE_INVOKING=1" >> "$GITHUB_ENV"
+        echo "$MSYS2_LOCATION/usr/bin" >> "$GITHUB_PATH"
+      shell: bash
+      if: ${{ runner.os == 'windows' }}
+      env:
+        MSYS2_LOCATION: ${{ steps.setup-msys2.outputs.msys2-location }}
+
+    - run: |
         : Set up
         epoch=$((`TZ=GMT0 date \
           +"((%Y-1600)*365+(%Y-1600)/4-(%Y-1600)/100+(%Y-1600)/400+1%j-1000-135140) \
@@ -488,7 +514,7 @@ runs:
 
         printf 'Running dir-index.sh with arguments: %s\n' "${args[*]}"
 
-        "$SETUP_REPO_DIR/build/bin/dir-index.sh" "${args[@]}"
+        dash "$SETUP_REPO_DIR/build/bin/dir-index.sh" "${args[@]}"
 
       shell: bash
       env:
