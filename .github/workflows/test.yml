@@ -52,6 +52,17 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os.runner }}
     steps:
+      - id: setup
+        run: |
+          artifact_id="$PR_PREFIX${GITHUB_SHA:0:7}-$GITHUB_RUN_ATTEMPT"
+          echo "artifact-id=$artifact_id" >> "$GITHUB_OUTPUT"
+        shell: bash
+        env:
+          PR_PREFIX: >-
+            ${{
+              github.event_name == 'pull_request' &&
+                format('PR{0}-', github.event.number) || ''
+            }}
       - uses: actions/checkout@v7
       - uses: $/
         with:
@@ -61,9 +72,9 @@ jobs:
           name: >-
             ${{
               format(
-                'index_{0}_{1}',
-                matrix.os.suffix,
-                github.run_attempt
+                'index-{0}_{1}',
+                steps.setup.outputs.artifact-id,
+                matrix.os.suffix
               )
             }}
           path: index.html
