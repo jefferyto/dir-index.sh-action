@@ -351,6 +351,11 @@ runs:
         MSYS2_LOCATION: ${{ steps.setup-msys2.outputs.msys2-location }}
 
     - run: |
+        temp="$RUNNER_TEMP"
+        if cygpath --version >/dev/null 2>&1; then
+          temp="$(cygpath "$RUNNER_TEMP")"
+        fi
+
         epoch=$((`TZ=GMT0 date \
           +"((%Y-1600)*365+(%Y-1600)/4-(%Y-1600)/100+(%Y-1600)/400+1%j-1000-135140) \
           *86400+(1%H-100)*3600+(1%M-100)*60+(1%S-100)"`))
@@ -358,13 +363,9 @@ runs:
         dir=".dir-index-sh-action.$epoch.$$"
         mkdir "$dir" "$dir/repo"
 
-        temp="$RUNNER_TEMP"
-        if cygpath --version >/dev/null 2>&1; then
-          temp="$(cygpath "$RUNNER_TEMP")"
-        fi
+        echo "runner-temp=$temp" >> "$GITHUB_OUTPUT"
 
-        echo "temp-dir=$temp" >> "$GITHUB_OUTPUT"
-        echo "action-dir=$dir" >> "$GITHUB_OUTPUT"
+        echo "working-dir=$dir" >> "$GITHUB_OUTPUT"
         echo "repo-dir=$dir/repo" >> "$GITHUB_OUTPUT"
       shell: bash
       name: Set up
@@ -443,9 +444,9 @@ runs:
         }
 
         args=( \
-          -B "$SETUP_TEMP_DIR" \
-          -i "$SETUP_ACTION_DIR" \
-          -k "$SETUP_ACTION_DIR"
+          -B "$SETUP_RUNNER_TEMP" \
+          -i "$SETUP_WORKING_DIR" \
+          -k "$SETUP_WORKING_DIR"
         )
 
         true_opt  -f "$INPUT_OVERWRITE"
@@ -518,8 +519,8 @@ runs:
       shell: bash
       name: Run dir-index.sh
       env:
-        SETUP_TEMP_DIR: ${{ steps.setup.outputs.temp-dir }}
-        SETUP_ACTION_DIR: ${{ steps.setup.outputs.action-dir }}
+        SETUP_RUNNER_TEMP: ${{ steps.setup.outputs.runner-temp }}
+        SETUP_WORKING_DIR: ${{ steps.setup.outputs.working-dir }}
         SETUP_REPO_DIR: ${{ steps.setup.outputs.repo-dir }}
         INPUT_PATHS: ${{ inputs.paths }}
         INPUT_OVERWRITE: ${{ inputs.overwrite }}
@@ -564,9 +565,9 @@ runs:
         INPUT_XML_ENCODING: ${{ inputs.xml-encoding }}
 
     - run: |
-        rm -rf "$SETUP_ACTION_DIR"
+        rm -rf "$SETUP_WORKING_DIR"
       shell: bash
       if: ${{ !cancelled() }}
       name: Clean up
       env:
-        SETUP_ACTION_DIR: ${{ steps.setup.outputs.action-dir }}
+        SETUP_WORKING_DIR: ${{ steps.setup.outputs.working-dir }}
