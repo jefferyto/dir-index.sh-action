@@ -357,6 +357,7 @@ runs:
         cd build
         ../configure --prefix="$PWD"
         make install
+      shell: bash
       env:
         SETUP_REPO_DIR: ${{ steps.setup.outputs.repo-dir }}
 
