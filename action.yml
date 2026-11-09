@@ -330,25 +330,37 @@ runs:
       if: ${{ runner.os == 'macos' }}
       name: Install dependencies
 
+    - run: |
+        $id = "dir-index-sh-action." + (New-Guid).ToString("N")
+
+        $location = Join-Path $env:RUNNER_TEMP $id
+
+        $msys2_cmd = Join-Path $env:RUNNER_TEMP "setup-msys2" "msys2.cmd"
+        $orig_msys2_cmd = Join-Path $env:RUNNER_TEMP "setup-msys2" ($id + ".msys2.cmd")
+
+        if (Test-Path $msys2_cmd) {
+          Move-Item $msys2_cmd $orig_msys2_cmd
+        }
+
+        "orig-msystem=$env:MSYSTEM" >> $env:GITHUB_OUTPUT
+
+        "location=$location" >> $env:GITHUB_OUTPUT
+
+        "msys2-cmd=$msys2_cmd" >> $env:GITHUB_OUTPUT
+        "orig-msys2-cmd=$orig_msys2_cmd" >> $env:GITHUB_OUTPUT
+      shell: pwsh
+      if: ${{ runner.os == 'windows' }}
+      name: Prepare MSYS2
+      id: prepare-msys2
+
     - if: ${{ runner.os == 'windows' }}
       name: Set up MSYS2
-      id: setup-msys2
       uses: msys2/setup-msys2@v2
       with:
         msystem: UCRT64
         update: true
-        install: autotools
-
-    - run: |
-        echo "MSYSTEM=UCRT64" >> "$GITHUB_ENV"
-        echo "MSYS2_PATH_TYPE=minimal" >> "$GITHUB_ENV"
-        echo "CHERE_INVOKING=1" >> "$GITHUB_ENV"
-        echo "$MSYS2_LOCATION/usr/bin" >> "$GITHUB_PATH"
-      shell: bash
-      if: ${{ runner.os == 'windows' }}
-      name: Set up MSYS2 environment
-      env:
-        MSYS2_LOCATION: ${{ steps.setup-msys2.outputs.msys2-location }}
+        install: autotools jq
+        location: ${{ steps.prepare-msys2.outputs.location }}
 
     - run: |
         temp="$RUNNER_TEMP"
@@ -367,7 +379,7 @@ runs:
 
         echo "working-dir=$dir" >> "$GITHUB_OUTPUT"
         echo "repo-dir=$dir/repo" >> "$GITHUB_OUTPUT"
-      shell: bash
+      shell: ${{ runner.os == 'windows' && 'msys2 {0}' || 'bash' }}
       name: Set up
       id: setup
 
@@ -384,7 +396,7 @@ runs:
         cd build
         ../configure --prefix="$PWD"
         make install
-      shell: bash
+      shell: ${{ runner.os == 'windows' && 'msys2 {0}' || 'bash' }}
       name: Build dir-index.sh
       working-directory: ${{ steps.setup.outputs.repo-dir }}
 
@@ -516,7 +528,7 @@ runs:
 
         dash "$SETUP_REPO_DIR/build/bin/dir-index.sh" "${args[@]}"
 
-      shell: bash
+      shell: ${{ runner.os == 'windows' && 'msys2 {0}' || 'bash' }}
       name: Run dir-index.sh
       env:
         SETUP_RUNNER_TEMP: ${{ steps.setup.outputs.runner-temp }}
@@ -566,8 +578,31 @@ runs:
 
     - run: |
         rm -rf "$SETUP_WORKING_DIR"
-      shell: bash
+      shell: ${{ runner.os == 'windows' && 'msys2 {0}' || 'bash' }}
       if: ${{ !cancelled() }}
       name: Clean up
       env:
         SETUP_WORKING_DIR: ${{ steps.setup.outputs.working-dir }}
+
+    - run: |
+        $location = $env:PREPARE_MSYS2_LOCATION
+
+        $msys2_cmd = $env:PREPARE_MSYS2_MSYS2_CMD
+        $orig_msys2_cmd = $env:PREPARE_MSYS2_ORIG_MSYS2_CMD
+
+        Remove-Item $location -Recurse -Force
+
+        Remove-Item $msys2_cmd
+        if (Test-Path $orig_msys2_cmd) {
+          Move-Item $orig_msys2_cmd $msys2_cmd
+        }
+
+        "MSYSTEM=$env:PREPARE_MSYS2_ORIG_MSYSTEM" >> $env:GITHUB_ENV
+      shell: pwsh
+      if: ${{ !cancelled() && runner.os == 'windows' }}
+      name: Clean up MSYS2
+      env:
+        PREPARE_MSYS2_ORIG_MSYSTEM: ${{ steps.prepare-msys2.outputs.orig-msystem }}
+        PREPARE_MSYS2_LOCATION: ${{ steps.prepare-msys2.outputs.location }}
+        PREPARE_MSYS2_MSYS2_CMD: ${{ steps.prepare-msys2.outputs.msys2-cmd }}
+        PREPARE_MSYS2_ORIG_MSYS2_CMD: ${{ steps.prepare-msys2.outputs.orig-msys2-cmd }}
