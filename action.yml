@@ -1,0 +1,545 @@
+#
+# action.yml
+# This file is part of dir-index.sh-action.
+#
+# Copyright (C) 2026  The dir-index.sh-action authors
+# <https://github.com/jefferyto/dir-index.sh-action>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+name: Generate directory index files
+description: >
+  A GitHub Action to generate static directory index files using
+  dir-index.sh
+author: jefferyto
+
+inputs:
+  # General options
+
+  dir-index-sh-ref:
+    description: >
+      The branch, tag or SHA of dir-index.sh to use
+    default: "1.3.0"
+
+  paths:
+    description: >
+      Relative paths (comma and/or newline separated) under
+      $GITHUB_WORKSPACE to generate directory index files
+    default: "."
+
+  overwrite:
+    description: >
+      Whether to overwrite existing directory index files
+      (valid values: "true" or "false";
+      default/empty value: "false")
+    default: ""
+
+  # Indexing options
+
+  ignore-patterns:
+    description: >
+      Ignore files and directories matching these (comma and/or newline
+      separated) shell patterns when indexing a directory
+    default: ""
+
+  ignore-dot:
+    description: >
+      Whether to ignore dot files and directories (.*)
+      (valid values: "true" or "false";
+      default/empty value: "true")
+    default: ""
+
+  ignore-includes:
+    description: >
+      Whether to ignore base name files included with '*-include'
+      options (see HTML-specific output options)
+      (valid values: "true" or "false";
+      default/empty value: "true")
+    default: ""
+
+  skip-patterns:
+    description: >
+      Skip directories matching these (comma and/or newline separated)
+      shell patterns and their subdirectories when searching for
+      directories to index
+    default: ""
+
+  skip-dot:
+    description: >
+      Whether to skip dot directories (.*)
+      (valid values: "true" or "false";
+      default/empty value: "true")
+    default: ""
+
+  skip-ignores:
+    description: >
+      Whether to apply ignore patterns to skip directories
+      (valid values: "true" or "false";
+      default/empty value: "false")
+    default: ""
+
+  # Output options
+
+  index-file-name:
+    description: >
+      File name to use for directory index files
+      (default/empty value: index.html, index.xml or index.json)
+    default: ""
+
+  index-file-format:
+    description: >
+      Format to use for directory index files
+      (valid values: "html", "xml" or "json";
+      default/empty value: "html")
+    default: ""
+
+  sort-by:
+    description: >
+      File property to sort directory index by
+      (valid values: "name", "modified" or "size";
+      default/empty value: "name")
+    default: ""
+
+  sort-direction:
+    description: >
+      Whether to sort ascending or descending
+      (valid values: "ascending"/"asc" or "descending"/"desc";
+      default/empty value: "ascending")
+    default: ""
+
+  version-sort:
+    description: >
+      Whether to sort by version name and number ("true") or by
+      lexicographical order ("false")
+      (valid values: "true" or "false";
+      default/empty value: "true")
+    default: ""
+
+  case-insensitive:
+    description: >
+      Whether to perform case-insensitive sort
+      (valid values: "true" or "false";
+      default/empty value: "false")
+    default: ""
+
+  folders-first:
+    description: >
+      Whether to list directories before files ("true") or list files
+      and directories together ("false")
+      (valid values: "true" or "false";
+      default/empty value: "false")
+    default: ""
+
+  update-directory-last-modified:
+    description: >
+      Whether to update last modified dates of directories when creating
+      directory index files
+      (valid values: "true" or "false";
+      default/empty value: "false")
+    default: ""
+
+  # HTML-specific output options
+
+  style:
+    description: >
+      Built-in style to use
+      (valid values: "none", "classic" or "classic-full";
+      default/empty value: "none")
+    default: ""
+
+  page-title:
+    description: >
+      Text to use for page title (<title>)
+      (use "%s" for the current index path, "%%s" for a literal "%s";
+      default/empty value: "Index of %s")
+    default: ""
+
+  page-text-direction:
+    description: >
+      Text to use for page text direction (<html dir="...">)
+      (default/empty value: none)
+    default: ""
+
+  page-language:
+    description: >
+      Text to use for page language (<html lang="...">)
+      (default/empty value: "en")
+    default: ""
+
+  page-charset:
+    description: >
+      Text to use for page charset (<meta charset="...">)
+      (default/empty value: "utf-8")
+    default: ""
+
+  head-html:
+    description: >
+      HTML to include in <head>
+    default: ""
+
+  header-html:
+    description: >
+      HTML to use for header
+      (use "%s" for the current index path, "%%s" for a literal "%s";
+      default/empty value: "Index of %s")
+    default: ""
+
+  breadcrumbs-root-link-html:
+    description: >
+      HTML to use for breadcrumbs root link
+      (default/empty value: "Home")
+    default: ""
+
+  readme-html:
+    description: >
+      HTML to use for readme
+      (default/empty value: "Generated by dir-index.sh <version>")
+    default: ""
+
+  head-include:
+    description: >
+      File to include in <head>
+    default: ""
+
+  header-include:
+    description: >
+      File to include in place of header
+    default: ""
+
+  readme-include:
+    description: >
+      File to include in place of readme
+    default: ""
+
+  columns:
+    description: >
+      Comma-separated list of columns to include in directory listing
+      (valid values: "name", "modified" and/or "size";
+      default/empty value: "name, modified, size")
+    default: ""
+
+  name-column-heading:
+    description: >
+      HTML to use for file name column heading
+      (default/empty value: "Name")
+    default: ""
+
+  last-modified-format:
+    description: >
+      Format string for file last modified dates
+      (same syntax as 'date' command output format string;
+      default/empty value: "%Y-%m-%d %H:%M")
+    default: ""
+
+  last-modified-utc:
+    description: >
+      Whether to output file last modified dates in UTC
+      (valid values: "true" or "false";
+      default/empty value: "false")
+    default: ""
+
+  last-modified-column-header:
+    description: >
+      HTML to use for file last modified column heading
+      (default/empty value: "Last modified")
+    default: ""
+
+  size-unit:
+    description: >
+      Unit for file sizes
+      (valid values:
+        "none" (exact size),
+        "si" (1k = 1000, 1M = 1000000, ...),
+        "iec" (1K = 1024, 1M = 1048576, ...), or
+        "iec-i" (1Ki = 1024, 1Mi = 1048576, ...);
+      default/empty value: "iec")
+    default: ""
+
+  size-column-heading:
+    description: >
+      HTML to use for file size column heading
+      (default/empty value: "Size")
+    default: ""
+
+  parent-directory-link-text:
+    description: >
+      Text to use for parent directory link
+      (default/empty value: "Parent Directory")
+    default: ""
+
+  index-path:
+    description: >
+      Generate directory index files as under this path instead of at
+      web server root
+      (should be an absolute path)
+    default: ""
+
+  output-as-list:
+    description: >
+      Whether to output directory index as a table ("false") or as a
+      list of file names only ("true")
+      (valid values: "true" or "false";
+      default/empty value: "false")
+    default: ""
+
+  horizontal-rule-lines:
+    description: >
+      Whether to output horizontal rule lines (<hr>) in directory index
+      table
+      (valid values: "true" or "false";
+      default/empty value: "true")
+    default: ""
+
+  html-preamble:
+    description: >
+      Whether to include opening and closing HTML ("true") or omit
+      opening HTML (<html>, <head>, etc.) when including file content
+      with 'header-include', and omit closing HTML (</body></html>) when
+      including file content with 'readme-include' ("false")
+      (valid values: "true" or "false";
+      default/empty value: "true")
+    default: ""
+
+  # XML-specific output options
+
+  xml-encoding:
+    description: >
+      Encoding to specify in XML declaration (<?xml encoding="..."?>)
+      (default/empty value: "UTF-8")
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - run: |
+        : Set up
+        epoch=$((`TZ=GMT0 date \
+          +"((%Y-1600)*365+(%Y-1600)/4-(%Y-1600)/100+(%Y-1600)/400+1%j-1000-135140) \
+          *86400+(1%H-100)*3600+(1%M-100)*60+(1%S-100)"`))
+
+        dir=".dir-index-sh_action.$epoch.$$"
+        mkdir "$dir" "$dir/repo"
+
+        temp="$RUNNER_TEMP"
+        if cygpath --version >/dev/null 2>&1; then
+          temp="$(cygpath "$RUNNER_TEMP")"
+        fi
+
+        echo "temp-dir=$temp" >> "$GITHUB_OUTPUT"
+        echo "action-dir=$dir" >> "$GITHUB_OUTPUT"
+        echo "repo-dir=$dir/repo" >> "$GITHUB_OUTPUT"
+      shell: bash
+      id: setup
+
+    - uses: actions/checkout@v7
+      with:
+        repository: jefferyto/dir-index.sh
+        ref: ${{ inputs.dir-index-sh-ref }}
+        path: ${{ steps.setup.outputs.repo-dir }}
+        clean: "false"
+
+    - run: |
+        : Set up dir-index.sh
+        cd "$SETUP_REPO_DIR"
+        ./bootstrap
+        cd build
+        ../configure --prefix="$PWD"
+        make install
+      env:
+        SETUP_REPO_DIR: ${{ steps.setup.outputs.repo-dir }}
+
+    - run: |
+        : Run dir-index.sh
+        true_opt() {
+          if [ "$2" == "true" ]; then
+            args+=("$1")
+          fi
+        }
+        val_opt() {
+          if [ -n "$2" ]; then
+            args+=("$1" "$2")
+          fi
+        }
+        opts_opt() {
+          opt="$1"
+          val=
+          shift
+          while [ "$#" -gt 0 ]; do
+            if [ -n "$3" ]; then
+              if [ "$3" == "true" ]; then
+                val="${val:+$val,}$1"
+              elif [ -n "$2" ]; then
+                val="${val:+$val,}$2"
+              fi
+            fi
+            shift 3
+          done
+          if [ -n "$val" ]; then
+            args+=("$opt" "$val")
+          fi
+        }
+        multi_opt() {
+          while IFS= read -r line; do
+            line="${line#"${line%%[![:space:]]*}"}"
+            line="${line%"${line##*[![:space:]]}"}"
+            if [ -z "$line" ]; then
+              continue
+            fi
+            line="$line,"
+            while [ -n "$line" ]; do
+              val="${line%%,*}"
+              val="${val#"${val%%[![:space:]]*}"}"
+              val="${val%"${val##*[![:space:]]}"}"
+              if [ -n "$val" ]; then
+                if [ -n "$1" ]; then
+                  args+=("$1" "$val")
+                else
+                  args+=("$val")
+                fi
+              fi
+              line="${line#*,}"
+            done
+          done << EOF
+        $2
+        EOF
+        }
+
+        args=( \
+          -B "$SETUP_TEMP_DIR" \
+          -i "$SETUP_ACTION_DIR" \
+          -k "$SETUP_ACTION_DIR"
+        )
+
+        true_opt  -f "$INPUT_OVERWRITE"
+
+        multi_opt -i "$INPUT_IGNORE_PATTERNS"
+        opts_opt  -T \
+          ignore-dot      no-ignore-dot      "$INPUT_IGNORE_DOT" \
+          ignore-includes no-ignore-includes "$INPUT_IGNORE_INCLUDES"
+
+        multi_opt -k "$INPUT_SKIP_PATTERNS"
+        opts_opt  -W \
+          skip-dot     no-skip-dot     "$INPUT_SKIP_DOT" \
+          skip-ignores no-skip-ignores "$INPUT_SKIP_IGNORES"
+
+        val_opt   -o "$INPUT_INDEX_FILE_NAME"
+        val_opt   -O "$INPUT_INDEX_FILE_FORMAT"
+
+        val_opt   -s "$INPUT_SORT_BY"
+        opts_opt  -S \
+          true          "$INPUT_SORT_DIRECTION" "$INPUT_SORT_DIRECTION" \
+          version       no-version              "$INPUT_VERSION_SORT" \
+          no-case       case                    "$INPUT_CASE_INSENSITIVE" \
+          folders-first no-folders-first        "$INPUT_FOLDERS_FIRST"
+
+        true_opt  -F "$INPUT_UPDATE_DIRECTORY_LAST_MODIFIED"
+
+        val_opt   -y "$INPUT_STYLE"
+
+        val_opt   -t "$INPUT_PAGE_TITLE"
+        val_opt   -w "$INPUT_PAGE_TEXT_DIRECTION"
+        val_opt   -l "$INPUT_PAGE_LANGUAGE"
+        val_opt   -A "$INPUT_PAGE_CHARSET"
+        val_opt   -e "$INPUT_HEAD_HTML"
+
+        val_opt   -d "$INPUT_HEADER_HTML"
+        val_opt   -x "$INPUT_BREADCRUMBS_ROOT_LINK_HTML"
+        val_opt   -r "$INPUT_README_HTML"
+
+        val_opt   -E "$INPUT_HEAD_INCLUDE"
+        val_opt   -D "$INPUT_HEADER_INCLUDE"
+        val_opt   -R "$INPUT_README_INCLUDE"
+
+        val_opt   -C "$INPUT_COLUMNS"
+
+        val_opt   -N "$INPUT_NAME_COLUMN_HEADING"
+
+        val_opt   -m "$INPUT_LAST_MODIFIED_FORMAT"
+        true_opt  -u "$INPUT_LAST_MODIFIED_UTC"
+        val_opt   -M "$INPUT_LAST_MODIFIED_HEADER"
+
+        val_opt   -z "$INPUT_SIZE_UNIT"
+        val_opt   -Z "$INPUT_SIZE_COLUMN_HEADING"
+
+        val_opt   -P "$INPUT_PARENT_DIRECTORY_LINK_TEXT"
+
+        val_opt   -X "$INPUT_INDEX_PATH"
+        opts_opt  -H \
+          list     table       "$INPUT_OUTPUT_AS_LIST" \
+          rules    no-rules    "$INPUT_HOTIZONTAL_RULE_LINES" \
+          preamble no-preamble "$INPUT_HTML_PREAMBLE"
+
+        val_opt   -G "$INPUT_XML_ENCODING"
+
+        multi_opt "" "$INPUT_PATHS"
+
+        printf 'Running dir-index.sh with arguments: %s\n' "${args[*]}"
+
+        "$SETUP_REPO_DIR/build/bin/dir-index.sh" "${args[@]}"
+
+      shell: bash
+      env:
+        SETUP_TEMP_DIR: ${{ steps.setup.outputs.temp-dir }}
+        SETUP_ACTION_DIR: ${{ steps.setup.outputs.action-dir }}
+        SETUP_REPO_DIR: ${{ steps.setup.outputs.repo-dir }}
+        INPUT_PATHS: ${{ inputs.paths }}
+        INPUT_OVERWRITE: ${{ inputs.overwrite }}
+        INPUT_IGNORE_PATTERNS: ${{ inputs.ignore-patterns }}
+        INPUT_IGNORE_DOT: ${{ inputs.ignore-dot }}
+        INPUT_IGNORE_INCLUDES: ${{ inputs.ignore-includes }}
+        INPUT_SKIP_PATTERNS: ${{ inputs.skip-patterns }}
+        INPUT_SKIP_DOT: ${{ inputs.skip-dot }}
+        INPUT_SKIP_IGNORES: ${{ inputs.skip-ignores }}
+        INPUT_INDEX_FILE_NAME: ${{ inputs.index-file-name }}
+        INPUT_INDEX_FILE_FORMAT: ${{ inputs.index-file-format }}
+        INPUT_SORT_BY: ${{ inputs.sort-by }}
+        INPUT_SORT_DIRECTION: ${{ inputs.sort-direction }}
+        INPUT_VERSION_SORT: ${{ inputs.version-sort }}
+        INPUT_CASE_INSENSITIVE: ${{ inputs.case-insensitive }}
+        INPUT_FOLDERS_FIRST: ${{ inputs.folders-first }}
+        INPUT_UPDATE_DIRECTORY_LAST_MODIFIED: ${{ inputs.update-directory-last-modified }}
+        INPUT_STYLE: ${{ inputs.style }}
+        INPUT_PAGE_TITLE: ${{ inputs.page-title }}
+        INPUT_PAGE_TEXT_DIRECTION: ${{ inputs.page-text-direction }}
+        INPUT_PAGE_LANGUAGE: ${{ inputs.page-language }}
+        INPUT_PAGE_CHARSET: ${{ inputs.page-charset }}
+        INPUT_HEAD_HTML: ${{ inputs.head-html }}
+        INPUT_HEADER_HTML: ${{ inputs.header-html }}
+        INPUT_BREADCRUMBS_ROOT_LINK_HTML: ${{ inputs.breadcrumbs-root-link-html }}
+        INPUT_README_HTML: ${{ inputs.readme-html }}
+        INPUT_HEAD_INCLUDE: ${{ inputs.head-include }}
+        INPUT_HEADER_INCLUDE: ${{ inputs.header-include }}
+        INPUT_README_INCLUDE: ${{ inputs.readme-include }}
+        INPUT_COLUMNS: ${{ inputs.columns }}
+        INPUT_NAME_COLUMN_HEADING: ${{ inputs.name-column-heading }}
+        INPUT_LAST_MODIFIED_FORMAT: ${{ inputs.last-modified-format }}
+        INPUT_LAST_MODIFIED_UTC: ${{ inputs.last-modified-utc }}
+        INPUT_LAST_MODIFIED_HEADER: ${{ inputs.last-modified-column-header }}
+        INPUT_SIZE_UNIT: ${{ inputs.size-unit }}
+        INPUT_SIZE_COLUMN_HEADING: ${{ inputs.size-column-heading }}
+        INPUT_PARENT_DIRECTORY_LINK_TEXT: ${{ inputs.parent-directory-link-text }}
+        INPUT_INDEX_PATH: ${{ inputs.index-path }}
+        INPUT_OUTPUT_AS_LIST: ${{ inputs.output-as-list }}
+        INPUT_HOTIZONTAL_RULE_LINES: ${{ inputs.horizontal-rule-lines }}
+        INPUT_HTML_PREAMBLE: ${{ inputs.html-preamble }}
+        INPUT_XML_ENCODING: ${{ inputs.xml-encoding }}
+
+    - run: |
+        : Clean up
+        rm -rf "$SETUP_ACTION_DIR"
+      shell: bash
+      if: ${{ !cancelled() }}
+      env:
+        SETUP_ACTION_DIR: ${{ steps.setup.outputs.action-dir }}

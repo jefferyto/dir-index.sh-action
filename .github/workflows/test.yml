@@ -1,0 +1,69 @@
+#
+# test.yml
+# This file is part of dir-index.sh-action.
+#
+# Copyright (C) 2026  The dir-index.sh-action authors
+# <https://github.com/jefferyto/dir-index.sh-action>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ format('{0}-{1}', github.workflow, github.ref) }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.os.name }}
+    strategy:
+      matrix:
+        os:
+          - name: Ubuntu
+            suffix: ubuntu
+            runner: ubuntu-latest
+          - name: macOS
+            suffix: macos
+            runner: macos-latest
+          - name: Windows
+            suffix: windows
+            runner: windows-latest
+      fail-fast: false
+    runs-on: ${{ matrix.os.runner }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: $/
+        with:
+          style: classic
+      - uses: actions/upload-artifact@v7
+        with:
+          name: >-
+            ${{
+              format(
+                'index_{0}_{1}',
+                matrix.os.suffix,
+                github.run_attempt
+              )
+            }}
+          path: index.html
