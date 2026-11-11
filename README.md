@@ -1,4 +1,4 @@
-# dir-index.sh action
+# dir-index.sh action 
 
 Use [dir-index.sh] to generate static index files.
 
