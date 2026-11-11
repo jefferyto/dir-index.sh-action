@@ -26,6 +26,12 @@ on:
     branches:
       - main
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - review_requested
 
 permissions:
   contents: read
@@ -37,20 +43,24 @@ concurrency:
 jobs:
   test:
     name: ${{ matrix.os.name }}
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    runs-on: ${{ matrix.os.runner }}
     strategy:
+      fail-fast: false
       matrix:
         os:
           - name: Ubuntu
             suffix: ubuntu
             runner: ubuntu-latest
+
           - name: macOS
             suffix: macos
             runner: macos-latest
+
           - name: Windows
             suffix: windows
             runner: windows-latest
-      fail-fast: false
-    runs-on: ${{ matrix.os.runner }}
+
     steps:
       - id: setup
         run: |
@@ -63,10 +73,13 @@ jobs:
               github.event_name == 'pull_request' &&
                 format('PR{0}-', github.event.number) || ''
             }}
+
       - uses: actions/checkout@v7
+
       - uses: $/
         with:
           style: classic
+
       - uses: actions/upload-artifact@v7
         with:
           name: >-
